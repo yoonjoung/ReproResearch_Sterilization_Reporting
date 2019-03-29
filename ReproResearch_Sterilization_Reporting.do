@@ -18,7 +18,7 @@ conducting analysis. Analysis section contains code only for reproducing results
 presented in the paper. 
 
 The paper was prepared using Stata and equivalent R Markdown fileand HTML output 
-is available at [GitHub](https://github.com/yoonjoung?tab=projects)
+is available at [GitHub](https://github.com/yoonjoung/ReproResearch_Sterilization_Reporting)
 */ 
 
 *********************************************************
