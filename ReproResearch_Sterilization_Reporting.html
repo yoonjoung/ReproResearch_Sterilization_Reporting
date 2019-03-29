@@ -187,28 +187,30 @@ $(document).ready(function () {
 </div>
 
 
-<p><strong>This is WORK IN PROGRESS</strong><br />
-<strong>need to check xtime_yr: stata vs. R</strong><br />
-<strong>check if edu3 results in Table 1 and 2 in the paper have any typos</strong></p>
 <ul>
 <li>Author: YJ Choi<br />
 </li>
 <li>Date: 2019-03-29</li>
 </ul>
-<p>This is markdown file to reproduce analysis and results for a published paper: <strong>Reporting sterilization as a current contraceptive method among sterilized women: lessons learned from a population with high sterilization rates, Rajasthan, India</strong> (<em>Contraception</em>. 2019 Feb;99(2):131-136). The abstract and link to the full paper is <a href="https://www.ncbi.nlm.nih.gov/pubmed/30391289">available here</a>.</p>
-<p>There are three sections in this document for: accessing public data; preparing the analysis data file (i.e., data processing/manipulation); and conducting analysis. Analysis section contains code only for reproducing results presented in the paper. The paper was prepared using <strong>Stata</strong> and equivalent Stata do file is available at <a href="https://github.com/yoonjoung/ReproResearch_Sterilization_Reporting">GitHub</a>.</p>
+<p>This is markdown file to reproduce analysis and results for a published paper: <strong>Reporting sterilization as a current contraceptive method among sterilized women: lessons learned from a population with high sterilization rates, Rajasthan, India</strong> (<em>Contraception</em>. 2019 Feb;99(2):131-136). The abstract, link to the complete paper, and full publication information is <a href="https://www.ncbi.nlm.nih.gov/pubmed/30391289">available here</a>.</p>
+<p>There are three sections in this document for: accessing public data; preparing the analysis data file (i.e., data processing/manipulation); and conducting analysis. Analysis section contains code that is only relevant to reproduce results presented in the paper. The paper was prepared using <strong>Stata</strong> and equivalent Stata do file is available at <a href="https://github.com/yoonjoung/ReproResearch_Sterilization_Reporting">GitHub</a>.</p>
 <pre class="r"><code>&quot;R code is shown in a gray box&quot;</code></pre>
-<pre><code>Output is in white box.   </code></pre>
+<pre><code>Output is in white box. (Not all reults are shown in the output document. To see results, simply remove the argument &quot;results=FALSE&quot; from a code chunk)</code></pre>
 <div id="data-access" class="section level2">
-<h2>1. Data access</h2>
+<h2>1. Data Access</h2>
 <p>Data came from the Performance Monitoring and Accountability 2020 (PMA2020) survey conducted in Rajasthan, India, in early 2017. PMA2020 survey data are available for the public, and can be accessed here: <a href="https://www.pma2020.org/request-access-to-datasets" class="uri">https://www.pma2020.org/request-access-to-datasets</a>. Request and download <strong>“Round 2 (2017) Rajasthan Household/Female survey”</strong> data. The file has been saved as <strong>“INR2_Rajasthan_HHQFQ.dta”</strong> in Stata format in a directory.</p>
 </div>
 <div id="data-management" class="section level2">
-<h2>2. Data management</h2>
+<h2>2. Data Management</h2>
+<div id="load-data" class="section level4">
+<h4>2.1. Load data</h4>
 <p>Load the downloaded public data file into “dtapublic” (If you run this markdown file on your computer, you will need to change the file path <strong>according to your directory setting</strong>).</p>
 <pre class="r"><code>suppressPackageStartupMessages(library (haven)) 
 dtapublic&lt;-data.frame(read_dta(&quot;C:/YJ/Data PMA/rawHHQFQ/INR2_Rajasthan_HHQFQ.dta&quot;))</code></pre>
-<p>The unit of analysis is a female respondent in the survey. Since the public datafile include both household and female level observations, keep only female level observations. Then, keep only completed interviews with de facto sample. The analysis dataset, “dta”, now has 6015 observations, all de-facto women 15-49 years of age who live in the sampled households.</p>
+</div>
+<div id="define-analysis-sample" class="section level4">
+<h4>2.2. Define analysis sample</h4>
+<p>The unit of analysis is a female respondent in the survey. Since the public data file include both household and female level observations, keep only female level observations. Then, keep only completed interviews with de facto sample. The analysis dataset, “dta”, now has 6015 observations, all de-facto women 15-49 years of age who live in the sampled households.</p>
 <pre class="r"><code>suppressPackageStartupMessages(library (dplyr))
 #keep only female observations (as opposed to household)
 dta&lt;-filter(dtapublic, FQmetainstanceID!=&quot;&quot;)
@@ -219,8 +221,11 @@ dta&lt;-filter(dta, usually_live==1)
 #check the number of observations in the analysis dataset, &quot;dta&quot;
 nrow(dta) </code></pre>
 <pre><code>## [1] 6015</code></pre>
-<p><em>NOTE: In the above code chunk, “<code>dta&lt;-filter(dta, usually_live==1)</code>” should have been “<code>dta&lt;-filter(dta, last_night==1)</code>”: i.e., there was an error in classifying de-factor vs. de-jure popualtion, though small (2.1% of women who completed interview, 129/6089). The correct total number of de-factor population is 6034. Revised analysis results (not presented here, but can be produced with the changed code, “<code>dta&lt;-filter(dta, last_night==1)</code>”) are very comparable with published results. In any case, YC is responsible for this error.</em></p>
-<p>Then construct variables that are used for analysis. First, create demographic and backgorund characteristics variables.</p>
+<p><em>NOTE: In the above code chunk, “<code>dta&lt;-filter(dta, usually_live==1)</code>” should have been “<code>dta&lt;-filter(dta, last_night==1)</code>”: i.e., there was an error in classifying de-factor vs. de-jure population, though small (2.1% of women who completed interview, 129/6089). The correct total number of de-factor population is 6034. Revised analysis results (not presented here, but can be produced with the changed code, “<code>dta&lt;-filter(dta, last_night==1)</code>”) are very comparable with the published results. In any case, YC is responsible for this error.</em></p>
+</div>
+<div id="construct-analysis-variables" class="section level4">
+<h4>2.3. Construct analysis variables</h4>
+<p>First, create demographic and background characteristics variables.</p>
 <pre class="r"><code>suppressPackageStartupMessages(library(car))
 
 agebreaks&lt;-c(15,20,25,30,35,40,45,50)
@@ -315,7 +320,7 @@ dta&lt;-mutate(dta,
     # time since start 
     xtime=xinterview_cmc - xbegin_cmc, 
     xtime   = ifelse(xsteril==FALSE, NA, xtime),
-    xtime_yr = round((xtime/12), 0),
+    xtime_yr = trunc((xtime/12), 0),
     xtime_yr5=cut(xtime_yr, 
                   breaks=c(0, 5, 10, 15, 20, 30), 
                   right = FALSE, 
@@ -340,12 +345,15 @@ label(dta$xtime)&lt;-&quot;time since method adoption (month)&quot;
 label(dta$xtime_yr)&lt;-&quot;time since method adoption (year)&quot;           
 label(dta$xtime_yr5)&lt;-&quot;5-year category since method adoption&quot;  </code></pre>
 </div>
+</div>
 <div id="data-analysis" class="section level2">
 <h2>3. Data analysis</h2>
 <p>There are three tables in results. All estimates (e.g., proportion, odds ratio) were adjusted for survey sample design, since PMA2020 household surveys are sample surveys (see details regarding the sample design <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6084342/">here</a> and <a href="https://www.pma2020.org/sampling-overview">here</a>). The number of observations in all tables is unweighted number.</p>
-<div id="table-1" class="section level3">
-<h3>Table 1</h3>
+<div id="table-1" class="section level4">
+<h4>3.1. Table 1</h4>
 <p><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6367562/table/t0005/?report=objectonly">Table 1</a> presents study population characteristics: overall and by sterilization status.</p>
+<p>First, set the survey design</p>
+<p><em>Note: There were 55 cases (last_night!=1, due to the error mentioned above!) that have missing weight. In Stata, these cases are excluded in calculation, but R needs no missing weights for “surveydesign”. Thus, those cases are dropped here (see the code line for “dta2” below) to be consistent with the STATA results. Technically, we could have replaced missing values with the cluster-specific weight values. But, that was not done for the paper.</em></p>
 <pre class="r"><code>suppressPackageStartupMessages(library(survey))
 suppressPackageStartupMessages(library(dplyr))
 
@@ -353,10 +361,9 @@ dta2&lt;-dta%&gt;% filter(!is.na(dta$xweight))
 dtaw &lt;- svydesign(ids = ~ EA_ID,
                   data = dta2,
                   strata = ~ur,   
-                  weights = ~xweight)
-
-# Distribution of background characterisics among the study sample (second column in Table 1) 
-round(svymean( ~ xage, dtaw), 1)
+                  weights = ~xweight)</code></pre>
+<p>Distribution of background characteristics among the entire study sample (second column in Table 1)</p>
+<pre class="r"><code>round(svymean( ~ xage, dtaw), 1)
     mysvymean&lt;-svymean( ~ xage, dtaw)
     round(confint(mysvymean), 1)
 round(prop.table(svytable(~ xmarried, dtaw))*100, 1)
@@ -366,15 +373,13 @@ round(prop.table(svytable(~ xwealth5, dtaw))*100, 1)
 round(prop.table(svytable(~ xedu3, dtaw))*100, 1)
 round(prop.table(svytable(~ xcaste4, dtaw))*100, 1)
 round(prop.table(svytable(~ xreligion, dtaw))*100, 1)</code></pre>
-<p><em>Note: There were 55 cases (last_night!=1, due to the error mentioned above!) that have missing xweight. In Stata, these cases are excluded in calculation, but R needs no mising weights for “surveydesign”. Thus, those cases are dropped here (see the code line for “dta2” above) to be consistent with the STATA results. Technically, we could have replaced missing values with the cluster-specific weight values. But, that was not done for the paper.</em></p>
+<p>Then, distribution of background characteristics among those NOT sterilized (third column in Table 1)</p>
 <pre class="r"><code># level of strilization 
 table(dta$xsteril)
 round(prop.table(svytable(~ xsteril, dtaw))*100, 1)
 
-# Distribution of background characterisics among those NOT sterilized (third column in Table 1) 
 dtaneverst&lt;-dta2%&gt;% filter(dta2$xsteril==FALSE) 
 nrow(dtaneverst)
-
 dtaw &lt;- svydesign(ids = ~ EA_ID,
                   data = dtaneverst,
                   strata = ~ur,   
@@ -390,11 +395,9 @@ round(prop.table(svytable(~ xwealth5, dtaw))*100, 1)
 round(prop.table(svytable(~ xedu3, dtaw))*100, 1)
 round(prop.table(svytable(~ xcaste4, dtaw))*100, 1)
 round(prop.table(svytable(~ xreligion, dtaw))*100, 1)</code></pre>
-<pre class="r"><code># Distribution of background characterisics among those EVER  sterilized (fourth column in Table 1) 
-
-dtaeverst&lt;-dta2%&gt;% filter(dta2$xsteril==TRUE) 
+<p>Finally, distribution of background characteristics among those EVER sterilized (fourth column in Table 1)</p>
+<pre class="r"><code>dtaeverst&lt;-dta2%&gt;% filter(dta2$xsteril==TRUE) 
 nrow(dtaeverst)
-
 dtaw &lt;- svydesign(ids = ~ EA_ID,
                   data = dtaeverst,
                   strata = ~ur,   
@@ -412,10 +415,24 @@ round(prop.table(svytable(~ xcaste4, dtaw))*100, 1)
 round(prop.table(svytable(~ xreligion, dtaw))*100, 1)
 round(prop.table(svytable(~ xtime_yr5, dtaw))*100, 1)</code></pre>
 </div>
-<div id="table-2" class="section level3">
-<h3>Table 2</h3>
-<p><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6367562/table/t0010/?report=objectonly">Table 2</a> shows, among women who are sterilized, the percentage whoreported sterilization as a current contraceptive method by background characteristics. The research question here is</p>
-<pre class="r"><code>dtaw &lt;- svydesign(ids = ~ EA_ID,
+<div id="table-2" class="section level4">
+<h4>3.2. Table 2</h4>
+<p><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6367562/table/t0010/?report=objectonly">Table 2</a> shows, among women who are sterilized, the percentage who reported sterilization as a current contraceptive method by background characteristics.</p>
+<p>First, denominator in each sub-group</p>
+<pre class="r"><code>dtaeverst&lt;-dta %&gt;% filter(dta$xsteril==TRUE) 
+
+table(dtaeverst$xagegroup5)
+table(dtaeverst$xmarried)
+table(dtaeverst$xsa)
+table(dtaeverst$xurban)
+table(dtaeverst$xwealth5)
+table(dtaeverst$xedu3 )         
+table(dtaeverst$xcaste4)
+table(dtaeverst$xreligion)
+table(dtaeverst$xtime_yr5)</code></pre>
+<p>Then, proportion of reporting by background characteristics</p>
+<pre class="r"><code>dtaeverst&lt;-dta2 %&gt;% filter(dta2$xsteril==TRUE) 
+dtaw &lt;- svydesign(ids = ~ EA_ID,
                   data = dtaeverst,
                   strata = ~ur,   
                   weights = ~xweight)
@@ -429,9 +446,9 @@ svyby(~xst_report, ~ xcaste4, dtaw, svymean)
 svyby(~xst_report, ~ xreligion, dtaw, svymean)
 svyby(~xst_report, ~ xtime_yr5, dtaw, svymean)</code></pre>
 </div>
-<div id="table-3" class="section level3">
-<h3>Table 3</h3>
-<p>Fnally, <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6367562/table/t0015/?report=objectonly">Table 3</a> presents differential odds of reporting sterilization as a current contraceptive method by background characteristics, among women who are sterilized. The table shows both bivariate and multivariable logistic regression analyses results.</p>
+<div id="table-3" class="section level4">
+<h4>3.3. Table 3</h4>
+<p>Finally, <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6367562/table/t0015/?report=objectonly">Table 3</a> presents differential odds of reporting sterilization as a current contraceptive method by background characteristics, among women who are sterilized. The table shows both bivariate and multivariable logistic regression analyses results.</p>
 <p>First, bivariate regression by each covariate:</p>
 <pre class="r"><code>dtaw &lt;- svydesign(ids = ~ EA_ID,
                   data = dtaeverst,
@@ -443,117 +460,61 @@ mysvyglm&lt;-svyglm(xst_report ~ xmarried, dtaw, family=binomial)
     confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
     summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
     # Odds ratio, 95% confidence interval, and p-value
-    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]</code></pre>
-<pre><code>             summaryexp[, 1] 2.5 % 97.5 % summary[, 4]
-xmarriedTRUE            1.89  1.11   3.24        0.021</code></pre>
-<pre class="r"><code>mysvyglm&lt;-svyglm(xst_report ~ xsa, dtaw, family=binomial)
+    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]
+
+mysvyglm&lt;-svyglm(xst_report ~ xsa, dtaw, family=binomial)
+    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
+    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
+    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
+    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]
+
+mysvyglm&lt;-svyglm(xst_report ~ xurban, dtaw, family=binomial)
+    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
+    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
+    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
+    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]
+
+mysvyglm&lt;-svyglm(xst_report ~ xedupri, dtaw, family=binomial)
+    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
+    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
+    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
+    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]
+
+mysvyglm&lt;-svyglm(xst_report ~ xpoor+xrich, dtaw, family=binomial)
+    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
+    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
+    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
+    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]
+
+mysvyglm&lt;-svyglm(xst_report ~ xcaste_sc+xcaste_st+xcaste_obc, dtaw, family=binomial)
+    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
+    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
+    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
+    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]
+    
+mysvyglm&lt;-svyglm(xst_report ~ xhindu, dtaw, family=binomial)
+    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
+    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
+    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
+    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]
+    
+mysvyglm&lt;-svyglm(xst_report ~ xtime_yr5_2+xtime_yr5_3+xtime_yr5_4+xtime_yr5_5, dtaw, family=binomial)
     summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
     confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
     summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
     cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]</code></pre>
-<pre><code>    summaryexp[, 1] 2.5 % 97.5 % summary[, 4]
-xsa            1.09  0.73   1.63        0.659</code></pre>
-<pre class="r"><code>mysvyglm&lt;-svyglm(xst_report ~ xurban, dtaw, family=binomial)
-    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
-    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
-    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
-    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]</code></pre>
-<pre><code>           summaryexp[, 1] 2.5 % 97.5 % summary[, 4]
-xurbanTRUE            0.85  0.44   1.63        0.631</code></pre>
-<pre class="r"><code>mysvyglm&lt;-svyglm(xst_report ~ xedupri, dtaw, family=binomial)
-    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
-    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
-    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
-    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]</code></pre>
-<pre><code>                  summaryexp[, 1] 2.5 % 97.5 % summary[, 4]
-xedupri&gt;= Primary            1.05  0.73   1.52        0.779</code></pre>
-<pre class="r"><code>mysvyglm&lt;-svyglm(xst_report ~ xpoor+xrich, dtaw, family=binomial)
-    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
-    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
-    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
-    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]</code></pre>
-<pre><code>          summaryexp[, 1] 2.5 % 97.5 % summary[, 4]
-xpoorTRUE            0.61  0.36   1.02        0.059
-xrichTRUE            1.14  0.72   1.79        0.585</code></pre>
-<pre class="r"><code>mysvyglm&lt;-svyglm(xst_report ~ xcaste_sc+xcaste_st+xcaste_obc, dtaw, family=binomial)
-    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
-    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
-    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
-    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]</code></pre>
-<pre><code>               summaryexp[, 1] 2.5 % 97.5 % summary[, 4]
-xcaste_scTRUE             1.72  0.96   3.11        0.072
-xcaste_stTRUE             1.94  0.88   4.26        0.103
-xcaste_obcTRUE            2.14  1.25   3.67        0.006</code></pre>
-<pre class="r"><code>mysvyglm&lt;-svyglm(xst_report ~ xhindu, dtaw, family=binomial)
-    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
-    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
-    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
-    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]</code></pre>
-<pre><code>           summaryexp[, 1] 2.5 % 97.5 % summary[, 4]
-xhinduTRUE            1.07  0.54   2.13        0.841</code></pre>
-<pre class="r"><code>mysvyglm&lt;-svyglm(xst_report ~ xtime_yr5_2+xtime_yr5_3+xtime_yr5_4+xtime_yr5_5, dtaw, family=binomial)
-    summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
-    confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
-    summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
-    cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]</code></pre>
-<pre><code>                summaryexp[, 1] 2.5 % 97.5 % summary[, 4]
-xtime_yr5_2TRUE            0.84  0.60   1.17        0.297
-xtime_yr5_3TRUE            0.86  0.57   1.28        0.459
-xtime_yr5_4TRUE            1.22  0.79   1.89        0.367
-xtime_yr5_5TRUE            1.48  0.75   2.94        0.261</code></pre>
 <p>Multivariable regression:</p>
 <pre class="r"><code>dtaw &lt;- svydesign(ids = ~ EA_ID,
                   data = dtaeverst,
                   strata = ~ur,   
                   weights = ~xweight)
 
-mysvyglm&lt;-svyglm(xst_report ~ 
-                     xagegroup5_3+xagegroup5_4+xagegroup5_5+xagegroup5_6+xagegroup5_7+
-                     xmarried+xsa+xurban+xedupri+xpoor+xrich+
-                     xcaste_sc+xcaste_st+xcaste_obc+xhindu+
-                     xtime_yr5_2+xtime_yr5_3+xtime_yr5_4+xtime_yr5_5,
-                 dtaw, family=binomial)
-#Overall summary 
-summary(mysvyglm)</code></pre>
-<pre><code>
-Call:
-svyglm(formula = xst_report ~ xagegroup5_3 + xagegroup5_4 + xagegroup5_5 + 
-    xagegroup5_6 + xagegroup5_7 + xmarried + xsa + xurban + xedupri + 
-    xpoor + xrich + xcaste_sc + xcaste_st + xcaste_obc + xhindu + 
-    xtime_yr5_2 + xtime_yr5_3 + xtime_yr5_4 + xtime_yr5_5, design = dtaw, 
-    family = binomial)
-
-Survey design:
-svydesign(ids = ~EA_ID, data = dtaeverst, strata = ~ur, weights = ~xweight)
-
-Coefficients:
-                  Estimate Std. Error t value Pr(&gt;|t|)   
-(Intercept)       -0.04989    0.59587  -0.084  0.93341   
-xagegroup5_3TRUE   0.01351    0.32671   0.041  0.96708   
-xagegroup5_4TRUE  -0.11505    0.30056  -0.383  0.70252   
-xagegroup5_5TRUE  -0.16946    0.34889  -0.486  0.62802   
-xagegroup5_6TRUE  -0.13805    0.37776  -0.365  0.71539   
-xagegroup5_7TRUE  -0.16236    0.43067  -0.377  0.70682   
-xmarriedTRUE       0.80993    0.32869   2.464  0.01509 * 
-xsa                0.02227    0.25792   0.086  0.93135   
-xurbanTRUE        -0.27209    0.33449  -0.813  0.41751   
-xedupri&gt;= Primary  0.06537    0.16050   0.407  0.68447   
-xpoorTRUE         -0.61629    0.26449  -2.330  0.02140 * 
-xrichTRUE          0.25741    0.19467   1.322  0.18850   
-xcaste_scTRUE      0.68876    0.27956   2.464  0.01511 * 
-xcaste_stTRUE      0.81330    0.38487   2.113  0.03657 * 
-xcaste_obcTRUE     0.82758    0.27496   3.010  0.00316 **
-xhinduTRUE         0.06942    0.37437   0.185  0.85319   
-xtime_yr5_2TRUE   -0.09980    0.18546  -0.538  0.59146   
-xtime_yr5_3TRUE   -0.04611    0.26953  -0.171  0.86445   
-xtime_yr5_4TRUE    0.27244    0.30942   0.880  0.38028   
-xtime_yr5_5TRUE    0.44248    0.44180   1.002  0.31850   
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-(Dispersion parameter for binomial family taken to be 0.9984464)
-
-Number of Fisher Scoring iterations: 4</code></pre>
+mysvyglm&lt;-svyglm(xst_report ~                      
+                 xagegroup5_3+xagegroup5_4+xagegroup5_5+xagegroup5_6+xagegroup5_7+
+                 xmarried+xsa+xurban+xedupri+xpoor+xrich+
+                 xcaste_sc+xcaste_st+xcaste_obc+xhindu+
+                 xtime_yr5_2+xtime_yr5_3+xtime_yr5_4+xtime_yr5_5,
+                 dtaw, family=binomial)</code></pre>
 <pre class="r"><code>summaryexp&lt;-round(as.data.frame(exp(summary(mysvyglm)$coef)), 2)
 confint   &lt;-round(as.data.frame(exp(confint(mysvyglm))), 2)
 summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
@@ -561,25 +522,26 @@ summary   &lt;-round(as.data.frame(summary(mysvyglm)$coef), 3)
 # Odds ratio, 95% confidence interval, and p-value
 cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]</code></pre>
 <pre><code>                  summaryexp[, 1] 2.5 % 97.5 % summary[, 4]
-xagegroup5_3TRUE             1.01  0.53   1.92        0.967
-xagegroup5_4TRUE             0.89  0.49   1.61        0.703
-xagegroup5_5TRUE             0.84  0.43   1.67        0.628
-xagegroup5_6TRUE             0.87  0.42   1.83        0.715
-xagegroup5_7TRUE             0.85  0.37   1.98        0.707
-xmarriedTRUE                 2.25  1.18   4.28        0.015
-xsa                          1.02  0.62   1.70        0.931
-xurbanTRUE                   0.76  0.40   1.47        0.418
-xedupri&gt;= Primary            1.07  0.78   1.46        0.684
-xpoorTRUE                    0.54  0.32   0.91        0.021
-xrichTRUE                    1.29  0.88   1.89        0.188
-xcaste_scTRUE                1.99  1.15   3.44        0.015
-xcaste_stTRUE                2.26  1.06   4.80        0.037
-xcaste_obcTRUE               2.29  1.33   3.92        0.003
-xhinduTRUE                   1.07  0.51   2.23        0.853
-xtime_yr5_2TRUE              0.91  0.63   1.30        0.591
-xtime_yr5_3TRUE              0.95  0.56   1.62        0.864
-xtime_yr5_4TRUE              1.31  0.72   2.41        0.380
-xtime_yr5_5TRUE              1.56  0.65   3.70        0.319</code></pre>
+xagegroup5_3TRUE             1.00  0.53   1.91        0.995
+xagegroup5_4TRUE             0.87  0.48   1.60        0.665
+xagegroup5_5TRUE             0.84  0.42   1.67        0.623
+xagegroup5_6TRUE             0.88  0.42   1.85        0.742
+xagegroup5_7TRUE             0.86  0.37   1.99        0.718
+xmarriedTRUE                 2.29  1.20   4.36        0.013
+xsa                          1.01  0.61   1.69        0.955
+xurbanTRUE                   0.76  0.40   1.46        0.411
+xedupri&gt;= Primary            1.07  0.78   1.46        0.685
+xpoorTRUE                    0.54  0.32   0.90        0.020
+xrichTRUE                    1.30  0.88   1.91        0.188
+xcaste_scTRUE                1.98  1.15   3.42        0.016
+xcaste_stTRUE                2.24  1.06   4.77        0.038
+xcaste_obcTRUE               2.28  1.33   3.90        0.003
+xhinduTRUE                   1.08  0.52   2.24        0.841
+xtime_yr5_2TRUE              0.94  0.65   1.35        0.742
+xtime_yr5_3TRUE              0.97  0.57   1.64        0.904
+xtime_yr5_4TRUE              1.24  0.70   2.19        0.455
+xtime_yr5_5TRUE              1.67  0.68   4.11        0.268</code></pre>
+<p>Note: In the published paper, it appears that distribution of educational level in Table 1 and Table 2 (denominator) were based on a categorical variable that was incorrectly created initially. However, the level of differential reporting presented in both Tables 2 and 3 are based on the correct variable, as shown in this document. It was the first author’s oversight.</p>
 </div>
 </div>
 

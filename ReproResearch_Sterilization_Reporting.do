@@ -164,6 +164,7 @@ keep if usually_live==1
 	lab var xtime_yr 	"number of years since sterilization" 
 	lab var xtime_yr5 	"number of years since sterilization (5-year group)" 	
 		
+	
 *********************************************************
 ***** Analysis 
 *********************************************************
@@ -235,5 +236,12 @@ codebook FQmeta /*n=1840 ALL sterilized women*/
 	***** TABNLE 3: multivariable 
 	svy: logistic xst_report xagegroup5_3 - xagegroup5_7 xmarried xsa ///
 	xurban xedupri xpoor xrich xcaste_* xhindu xtime_yr5_2 - xtime_yr5_5  
+
+/*
+Note: In the published paper, it appears that distribution of educational level in Table 1 and 
+Table 2 (denominator) were based on a categorical variable that was incorrectly created initially. 
+However, the level of differential reporting presented in both Tables 2 and 3 are based on the 
+correct variable, as shown in this document. It was the first author's oversight. 
+*/	
 	
 *END OF THIS FILE 

@@ -1,33 +1,31 @@
 ---
 output:
-  word_document: default
-  pdf_document: default
   html_document: default
+  pdf_document: default
+  word_document: default
 ---
 ```{r intro, echo=FALSE, results="hide"}
 date<-as.Date(Sys.time(), format='%d%b%Y')
 ```
-__This is WORK IN PROGRESS__  
-__need to check xtime_yr: stata vs. R__  
-__check if edu3 results in Table 1 and 2 in the paper have any typos__
-
 - Author: YJ Choi  
 - Date: `r date`  
 
-This is markdown file to reproduce analysis and results for a published paper: __Reporting sterilization as a current contraceptive method among sterilized women: lessons learned from a population with high sterilization rates, Rajasthan, India__ (_Contraception_. 2019 Feb;99(2):131-136). The abstract and link to the full paper is [available here](https://www.ncbi.nlm.nih.gov/pubmed/30391289).  
+This is markdown file to reproduce analysis and results for a published paper: __Reporting sterilization as a current contraceptive method among sterilized women: lessons learned from a population with high sterilization rates, Rajasthan, India__ (_Contraception_. 2019 Feb;99(2):131-136). The abstract, link to the complete paper, and full publication information is [available here](https://www.ncbi.nlm.nih.gov/pubmed/30391289).  
 
-There are three sections in this document for: accessing public data; preparing the analysis data file (i.e., data processing/manipulation); and conducting analysis. Analysis section contains code only for reproducing results presented in the paper. The paper was prepared using __Stata__ and equivalent Stata do file is available at [GitHub](https://github.com/yoonjoung/ReproResearch_Sterilization_Reporting). 
+There are three sections in this document for: accessing public data; preparing the analysis data file (i.e., data processing/manipulation); and conducting analysis. Analysis section contains code that is only relevant to reproduce results presented in the paper. The paper was prepared using __Stata__ and equivalent Stata do file is available at [GitHub](https://github.com/yoonjoung/ReproResearch_Sterilization_Reporting). 
 ```{r, results="hide"}
 "R code is shown in a gray box"
 ```
 ``` 
-Output is in white box.   
+Output is in white box. (Not all reults are shown in the output document. To see results, simply remove the argument "results=FALSE" from a code chunk)
 ```
 
-## 1. Data access
+## 1. Data Access
 Data came from the Performance Monitoring and Accountability 2020 (PMA2020) survey conducted in Rajasthan, India, in early 2017. PMA2020 survey data are available for the public, and can be accessed here: [https://www.pma2020.org/request-access-to-datasets](https://www.pma2020.org/request-access-to-datasets).  Request and download __"Round 2 (2017) Rajasthan Household/Female survey"__ data.  The file has been saved as __"INR2_Rajasthan_HHQFQ.dta"__ in Stata format in a directory.  
 
-## 2. Data management 
+## 2. Data Management 
+
+#### 2.1. Load data
 Load the downloaded public data file into "dtapublic" (If you run this markdown file on your computer, you will need to change the file path __according to your directory setting__).  
 ```{r load, message=FALSE}
 suppressPackageStartupMessages(library (haven)) 
@@ -42,7 +40,8 @@ obs<-nrow(subset(dtapublic, dtapublic$FQmetainstanceID!="" &
                 dtapublic$usually_live==1))
 ```	
 
-The unit of analysis is a female respondent in the survey. Since the public datafile include both household and female level observations, keep only female level observations. Then, keep only completed interviews with de facto sample. The analysis dataset, "dta", now has `r obs` observations, all de-facto women 15-49 years of age who live in the sampled households. 
+#### 2.2. Define analysis sample 
+The unit of analysis is a female respondent in the survey. Since the public data file include both household and female level observations, keep only female level observations. Then, keep only completed interviews with de facto sample. The analysis dataset, "dta", now has `r obs` observations, all de-facto women 15-49 years of age who live in the sampled households. 
 ```{r selectobs}
 suppressPackageStartupMessages(library (dplyr))
 #keep only female observations (as opposed to household)
@@ -54,9 +53,10 @@ dta<-filter(dta, usually_live==1)
 #check the number of observations in the analysis dataset, "dta"
 nrow(dta) 
 ```	
-_NOTE: In the above code chunk, "`dta<-filter(dta, usually_live==1)`" should have been "`dta<-filter(dta, last_night==1)`": i.e., there was an error in classifying de-factor vs. de-jure popualtion, though small (2.1% of women who completed interview, 129/6089). The correct total number of de-factor population is 6034. Revised analysis results (not presented here, but can be produced with the changed code, "`dta<-filter(dta, last_night==1)`") are very comparable with published results. In any case, YC is responsible for this error._ 
+_NOTE: In the above code chunk, "`dta<-filter(dta, usually_live==1)`" should have been "`dta<-filter(dta, last_night==1)`": i.e., there was an error in classifying de-factor vs. de-jure population, though small (2.1% of women who completed interview, 129/6089). The correct total number of de-factor population is 6034. Revised analysis results (not presented here, but can be produced with the changed code, "`dta<-filter(dta, last_night==1)`") are very comparable with the published results. In any case, YC is responsible for this error._ 
 
-Then construct variables that are used for analysis. First, create demographic and backgorund characteristics variables. 
+#### 2.3. Construct analysis variables 
+First, create demographic and background characteristics variables. 
 ```{r genvarbasic, results=FALSE}
 suppressPackageStartupMessages(library(car))
 
@@ -158,7 +158,7 @@ dta<-mutate(dta,
     # time since start 
     xtime=xinterview_cmc - xbegin_cmc, 
     xtime	= ifelse(xsteril==FALSE, NA, xtime),
-    xtime_yr = round((xtime/12), 0),
+    xtime_yr = trunc((xtime/12), 0),
     xtime_yr5=cut(xtime_yr, 
                   breaks=c(0, 5, 10, 15, 20, 30), 
                   right = FALSE, 
@@ -190,7 +190,7 @@ label(dta$xtime_yr5)<-"5-year category since method adoption"
 ## 3. Data analysis
 There are three tables in results. All estimates (e.g., proportion, odds ratio) were adjusted for survey sample design, since PMA2020 household surveys are sample surveys (see details regarding the sample design [here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6084342/) and [here](https://www.pma2020.org/sampling-overview)). The number of observations in all tables is unweighted number.  
 
-### Table 1 
+#### 3.1. Table 1 
 [Table 1](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6367562/table/t0005/?report=objectonly) presents study population characteristics: overall and by sterilization status.  
 ```{r table1unweighted, echo=FALSE, results='hide'}
 # check consistency in unweighted numbers against STATA results 
@@ -219,7 +219,10 @@ table(dta$xcaste4, dta$xsteril)
 table(dta$xreligion, dta$xsteril)
 ```
 
-```{r table1_col2, results="hide"}
+First, set the survey design  
+
+_Note: There were 55 cases (last_night!=1, due to the error mentioned above!) that have missing weight. In Stata, these cases are excluded in calculation, but R needs no missing weights for "surveydesign". Thus, those cases are dropped here (see the code line for "dta2" below) to be consistent with the STATA results. Technically, we could have replaced missing values with the cluster-specific weight values. But, that was not done for the paper._ 
+```{r table1, results="hide"}
 suppressPackageStartupMessages(library(survey))
 suppressPackageStartupMessages(library(dplyr))
 
@@ -228,8 +231,10 @@ dtaw <- svydesign(ids = ~ EA_ID,
                   data = dta2,
                   strata = ~ur,   
                   weights = ~xweight)
+```
 
-# Distribution of background characterisics among the study sample (second column in Table 1) 
+Distribution of background characteristics among the entire study sample (second column in Table 1) 
+```{r table1_col2, results="hide"}
 round(svymean( ~ xage, dtaw), 1)
     mysvymean<-svymean( ~ xage, dtaw)
     round(confint(mysvymean), 1)
@@ -241,22 +246,21 @@ round(prop.table(svytable(~ xedu3, dtaw))*100, 1)
 round(prop.table(svytable(~ xcaste4, dtaw))*100, 1)
 round(prop.table(svytable(~ xreligion, dtaw))*100, 1)
 ```
-_Note: There were 55 cases (last_night!=1, due to the error mentioned above!) that have missing xweight. In Stata, these cases are excluded in calculation, but R needs no mising weights for "surveydesign". Thus, those cases are dropped here (see the code line for "dta2" above) to be consistent with the STATA results. Technically, we could have replaced missing values with the cluster-specific weight values. But, that was not done for the paper._ 
 
 ```{r, echo=FALSE, results='hide'}
 # more checking of unweigted numbers 
-table(dta2$xagegroup5, dta2$xsteril)
-table(dta2$xmarried, dta2$xsteril)
-table(dta2$xsa, dta2$xsteril)
-table(dta2$xurban, dta2$xsteril)
-table(dta2$xwealth5, dta2$xsteril)
-table(dta2$xedu3 , dta2$xsteril)         
-table(dta2$xcaste4, dta2$xsteril)
-table(dta2$xreligion, dta2$xsteril)
+table(dta$xagegroup5, dta$xsteril)
+table(dta$xmarried, dta$xsteril)
+table(dta$xsa, dta$xsteril)
+table(dta$xurban, dta$xsteril)
+table(dta$xwealth5, dta$xsteril)
+table(dta$xedu3 , dta$xsteril)         
+table(dta$xcaste4, dta$xsteril)
+table(dta$xreligion, dta$xsteril)
 ```
 
 ```{r, echo=FALSE, results="hide"}
-#svymean works for some factor vars but not all, why?? 
+#svymean works for some factor vars but not all, why???? to be investigated ...  
 str(dta$xcaste4)
 round(prop.table(svytable(~ xcaste4, dtaw))*100, 1)
 round(svymean(~ xcaste4, dtaw)*100, 1)
@@ -265,15 +269,14 @@ round(prop.table(svytable(~ xreligion, dtaw))*100, 1)
 round(svymean(~ xreligion, dtaw)*100, 1)
 ```
 
+Then, distribution of background characteristics among those NOT sterilized (third column in Table 1) 
 ```{r table1_col3, results="hide"}
 # level of strilization 
 table(dta$xsteril)
 round(prop.table(svytable(~ xsteril, dtaw))*100, 1)
 
-# Distribution of background characterisics among those NOT sterilized (third column in Table 1) 
 dtaneverst<-dta2%>% filter(dta2$xsteril==FALSE) 
 nrow(dtaneverst)
-
 dtaw <- svydesign(ids = ~ EA_ID,
                   data = dtaneverst,
                   strata = ~ur,   
@@ -291,12 +294,10 @@ round(prop.table(svytable(~ xcaste4, dtaw))*100, 1)
 round(prop.table(svytable(~ xreligion, dtaw))*100, 1)
 ```
 
+Finally, distribution of background characteristics among those EVER sterilized (fourth column in Table 1) 
 ```{r table1_col4, results="hide"}
-# Distribution of background characterisics among those EVER  sterilized (fourth column in Table 1) 
-
 dtaeverst<-dta2%>% filter(dta2$xsteril==TRUE) 
 nrow(dtaeverst)
-
 dtaw <- svydesign(ids = ~ EA_ID,
                   data = dtaeverst,
                   strata = ~ur,   
@@ -315,9 +316,27 @@ round(prop.table(svytable(~ xreligion, dtaw))*100, 1)
 round(prop.table(svytable(~ xtime_yr5, dtaw))*100, 1)
 ```
 
-### Table 2 
-[Table 2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6367562/table/t0010/?report=objectonly) shows, among women who are sterilized, the percentage whoreported sterilization as a current contraceptive method by background characteristics. The research question here is  
+#### 3.2. Table 2  
+[Table 2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6367562/table/t0010/?report=objectonly) shows, among women who are sterilized, the percentage who reported sterilization as a current contraceptive method by background characteristics. 
+
+First, denominator in each sub-group 
+```{r table2unweighted, results='hide'}
+dtaeverst<-dta %>% filter(dta$xsteril==TRUE) 
+
+table(dtaeverst$xagegroup5)
+table(dtaeverst$xmarried)
+table(dtaeverst$xsa)
+table(dtaeverst$xurban)
+table(dtaeverst$xwealth5)
+table(dtaeverst$xedu3 )         
+table(dtaeverst$xcaste4)
+table(dtaeverst$xreligion)
+table(dtaeverst$xtime_yr5)
+```
+
+Then, proportion of reporting by background characteristics 
 ```{r table2, results="hide"}
+dtaeverst<-dta2 %>% filter(dta2$xsteril==TRUE) 
 dtaw <- svydesign(ids = ~ EA_ID,
                   data = dtaeverst,
                   strata = ~ur,   
@@ -333,11 +352,11 @@ svyby(~xst_report, ~ xreligion, dtaw, svymean)
 svyby(~xst_report, ~ xtime_yr5, dtaw, svymean)
 ```
 
-### Table 3 
-Fnally, [Table 3](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6367562/table/t0015/?report=objectonly) presents differential odds of reporting sterilization as a current contraceptive method by background characteristics, among women who are sterilized. The table shows both bivariate and multivariable logistic regression analyses results. 
+#### 3.3. Table 3 
+Finally, [Table 3](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6367562/table/t0015/?report=objectonly) presents differential odds of reporting sterilization as a current contraceptive method by background characteristics, among women who are sterilized. The table shows both bivariate and multivariable logistic regression analyses results. 
 
 First, bivariate regression by each covariate: 
-```{r table3_simple, warning=FALSE, comment=NA}
+```{r table3_simple, warning=FALSE, comment=NA, results="hide"}
 dtaw <- svydesign(ids = ~ EA_ID,
                   data = dtaeverst,
                   strata = ~ur,   
@@ -400,14 +419,12 @@ dtaw <- svydesign(ids = ~ EA_ID,
                   strata = ~ur,   
                   weights = ~xweight)
 
-mysvyglm<-svyglm(xst_report ~ 
-                     xagegroup5_3+xagegroup5_4+xagegroup5_5+xagegroup5_6+xagegroup5_7+
-                     xmarried+xsa+xurban+xedupri+xpoor+xrich+
-                     xcaste_sc+xcaste_st+xcaste_obc+xhindu+
-                     xtime_yr5_2+xtime_yr5_3+xtime_yr5_4+xtime_yr5_5,
+mysvyglm<-svyglm(xst_report ~                      
+                 xagegroup5_3+xagegroup5_4+xagegroup5_5+xagegroup5_6+xagegroup5_7+
+                 xmarried+xsa+xurban+xedupri+xpoor+xrich+
+                 xcaste_sc+xcaste_st+xcaste_obc+xhindu+
+                 xtime_yr5_2+xtime_yr5_3+xtime_yr5_4+xtime_yr5_5,
                  dtaw, family=binomial)
-#Overall summary 
-summary(mysvyglm)
 ```
 
 ```{r datawrangling, comment=NA}
@@ -418,3 +435,7 @@ summary   <-round(as.data.frame(summary(mysvyglm)$coef), 3)
 # Odds ratio, 95% confidence interval, and p-value
 cbind(summaryexp[,1], confint[,1:2], summary[,4])[-1,]
 ```
+
+Note: In the published paper, it appears that distribution of educational level in Table 1 and Table 2 (denominator) were based on a categorical variable that was incorrectly created initially. However, the level of differential reporting presented in both Tables 2 and 3 are based on the correct variable, as shown in this document. It was the first author's oversight. 
+
+
